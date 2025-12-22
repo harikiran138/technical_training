@@ -1,3 +1,4 @@
+from typing import List, Optional, Any
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -25,18 +26,23 @@ class Settings(BaseSettings):
     REDIS_URL: str
     
     # CORS - comma-separated string will be split
-    CORS_ORIGINS: str = "http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
     
-    def get_cors_origins(self) -> list[str]:
-        """Get CORS origins as a list."""
-        return [origin.strip() for origin in self.CORS_ORIGINS.split(",")]
-    
+    def get_cors_origins(self) -> List[str]:
+        if isinstance(self.CORS_ORIGINS, str):
+            return [i.strip() for i in self.CORS_ORIGINS.split(",")]
+        return self.CORS_ORIGINS
+
     # Pagination
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100
     
     # Rate Limiting
     RATE_LIMIT_PER_MINUTE: int = 60
+    
+    # AI Services
+    GEMINI_API_KEY: Optional[str] = None
+    OPENAI_API_KEY: Optional[str] = None
     
     class Config:
         env_file = ".env"

@@ -52,4 +52,38 @@ export const api = {
       return response.data;
     },
   },
+  users: {
+    getStudents: async () => {
+      const response = await apiClient.get('/users/students');
+      return response.data;
+    },
+    getStudentReport: async (id: string) => {
+      const response = await apiClient.get(`/users/${id}/report`);
+      return response.data;
+    }
+  },
+  assignments: {
+    create: async (data: any) => {
+      const response = await apiClient.post('/assignments/', data);
+      return response.data;
+    },
+    list: async () => {
+      const response = await apiClient.get('/assignments/');
+      return response.data;
+    },
+    get: async (id: string) => {
+      const response = await apiClient.get(`/assignments/${id}`);
+      return response.data;
+    },
+    submit: async (id: string, answers: any) => {
+       const response = await apiClient.post(`/submissions`, { assignment_id: id, answers });
+       return response.data; 
+    },
+    getAnalytics: async (id: string, generate: boolean = false) => {
+      const response = generate 
+        ? await apiClient.post(`/analytics/assignment/${id}`) 
+        : await apiClient.get(`/analytics/assignment/${id}`);
+      return response.data;
+    }
+  }
 };

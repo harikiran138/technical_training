@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status
 from app.models.user import User
@@ -77,3 +77,72 @@ class UserService:
         if not user.is_active:
             return None
         return user
+
+    def get_users_by_role(self, role: str) -> List[User]:
+        """
+        Get all users with a specific role.
+        """
+        return self.db.query(User).filter(User.role == role).all()
+
+    def get_student_academic_report(self, user_id: str) -> dict:
+        """
+        Calculates real academic metrics for a student.
+        """
+        from app.models.submission import Submission, Evaluation, SubmissionStatus
+        from app.models.assignment import Assignment
+        from sqlalchemy import func
+
+        student = self.get_by_id(user_id)
+        if not student:
+            return None
+
+        # Fetch all evaluated submissions
+        submissions = (
+            self.db.query(Submission)
+            .join(Evaluation)
+            .filter(
+                Submission.student_id == student.id,
+                Submission.status == SubmissionStatus.EVALUATED
+            )
+            .all()
+        )
+
+        assessments = []
+        total_percentage = 0
+        count = 0
+
+        for sub in submissions:
+            assignment = sub.assignment
+            evaluation = sub.evaluation
+            
+            if not assignment or not evaluation:
+                continue
+
+            percentage = (evaluation.total_marks / assignment.max_marks) * 100 if assignment.max_marks > 0 else 0
+            total_percentage += percentage
+            count += 1
+
+            assessments.append({
+                "name": assignment.title,
+                "description": assignment.description,
+                "score": evaluation.total_marks,
+                "total": assignment.max_marks,
+                "percentage": round(percentage, 2),
+                "feedback": evaluation.overall_feedback,
+                "date": sub.submitted_at.isoformat() if sub.submitted_at else None
+            })
+
+        avg_score = total_percentage / count if count > 0 else 0
+        
+        # Simple GPA calculation (4.0 scale)
+        gpa = round((avg_score / 100) * 4.0, 2)
+
+        return {
+            "student_id": str(student.id),
+            "name": f"{student.first_name} {student.last_name}",
+            "gpa": gpa,
+            "total_assignments": count,
+            "average_percentage": round(avg_score, 2),
+            "assessments": assessments,
+            "courses": [] # Placeholder for course integration
+        }
