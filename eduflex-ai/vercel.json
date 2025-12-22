@@ -17,6 +17,9 @@
       "dest": "/backend/index.py"
     },
     {
+      "handle": "filesystem"
+    },
+    {
       "src": "/(.*)",
       "dest": "/frontend/$1"
     }
