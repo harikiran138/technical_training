@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "eduflex-ai/frontend/package.json",
+      "use": "@vercel/next"
+    },
+    {
+      "src": "eduflex-ai/backend/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "eduflex-ai/backend/index.py"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "eduflex-ai/frontend/$1"
+    }
+  ]
+}
